@@ -25,6 +25,40 @@ Do not use this for trivial single-file lookups; direct file reads are faster.
 
 Prefer MCP in-agent. Use CLI for manual checks, setup, and diagnostics.
 
+## Preflight Validation (Required)
+
+Before using this skill, validate tool availability.
+
+### 1) Validate CLI exists
+
+```bash
+codesearch --version
+```
+
+If command is not found:
+- Do not attempt codesearch commands.
+- Report that codesearch CLI is missing.
+- Suggest installing codesearch first, then rerun.
+
+### 2) Validate MCP tools exist (in-agent)
+
+Try a lightweight MCP call first:
+
+```text
+codesearch_find_databases()
+```
+
+If MCP tools are unavailable:
+- Do not attempt MCP calls.
+- Fall back to CLI workflow (if CLI exists).
+
+### 3) Validate index readiness
+
+- MCP: `codesearch_index_status()`
+- CLI: `codesearch doctor`
+
+If index is not ready, run setup/index steps before searching.
+
 ## Verified CLI Commands
 
 ### Main and subcommand help

@@ -2,6 +2,11 @@
 
 Use this checklist before finalizing findings from codesearch.
 
+## Tool availability
+
+- [ ] CLI available (`codesearch --version` works)
+- [ ] MCP tools available (at least `codesearch_find_databases` responds), or documented fallback to CLI
+
 ## Index and scope
 
 - [ ] Index is ready (`codesearch_index_status` or `codesearch doctor`)
