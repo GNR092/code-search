@@ -1,139 +1,165 @@
 ---
 name: code-search
-description: Semantic code search and navigation using codesearch CLI. Find code patterns, symbols, references, and understand codebases efficiently.
+description: Búsqueda semántica de código en español e inglés. Busca patrones de código, símbolos, referencias y navega el codebase eficientemente. Usa esta skill cuando digas "busca", "busca código", "búsqueda", "encontrar código", "encuentra", "explora", "search" o cualquier consulta de búsqueda en cualquier idioma.
 ---
 
 # Code Search
 
-Semantic code search for CLI and MCP workflows.
-
-Tested with `codesearch v0.1.200+149`.
+Búsqueda semántica de código en español e inglés. Compatible con `codesearch v0.1.200+149` en Windows y Linux.
 
 ## Scope
 
-Use this skill when you need:
-- Fast orientation in unfamiliar repositories
-- Semantic discovery across many files
-- Symbol usage impact analysis before refactors
+Usa esta skill cuando necesites:
+- Orientación rápida en repositorios desconocidos
+- Descubrimiento semántico a través de muchos archivos
+- Análisis de impacto de símbolos antes de refactors
 
-Do not use this for trivial single-file lookups; direct file reads are faster.
+No usar para lookups triviales en archivos individuales; reads directos son más rápidos.
 
 ## Interfaces
 
-- **CLI**: `codesearch ...`
-- **MCP tools**: `codesearch_index_status`, `codesearch_semantic_search`, `codesearch_find_references`, `codesearch_find_databases`
+| Método | Comando | Ventaja |
+|--------|---------|---------|
+| **MCP** | `codesearch_semantic_search()`, `codesearch_find_references()`, etc. | Resultados inline, sin cambio de contexto |
+| **CLI** | `codesearch search`, `codesearch index`, etc. | Checks manuales, diagnósticos, setup |
 
-Prefer MCP in-agent. Use CLI for manual checks, setup, and diagnostics.
+## Validación Obligatoria (Preflight)
 
-## Preflight Validation (Required)
+Siempre validar antes de usar en una sesión.
 
-Before using this skill, validate tool availability.
-
-### 1) Validate CLI exists
+### 1. CLI disponible
 
 ```bash
 codesearch --version
 ```
 
-If command is not found:
-- Do not attempt codesearch commands.
-- Report that codesearch CLI is missing.
-- Suggest installing codesearch first, then rerun.
+Si no existe → reportar que falta y sugerir instalación.
 
-### 2) Validate MCP tools exist (in-agent)
-
-Try a lightweight MCP call first:
+### 2. MCP tools disponibles
 
 ```text
 codesearch_find_databases()
 ```
 
-If MCP tools are unavailable:
-- Do not attempt MCP calls.
-- Fall back to CLI workflow (if CLI exists).
+Si MCP no responde → fallback a CLI.
 
-### 3) Validate index readiness
+### 3. Índice listo
 
-- MCP: `codesearch_index_status()`
-- CLI: `codesearch doctor`
-
-If index is not ready, run setup/index steps before searching.
-
-## Verified CLI Commands
-
-### Main and subcommand help
 ```bash
-codesearch --help
-codesearch search --help
-codesearch index --help
-codesearch mcp --help
+codesearch doctor
 ```
 
-### Health and index state
+```text
+codesearch_index_status()
+```
+
+## Workflow Recomendado
+
+```
+1. VALIDAR
+   ├─ codesearch doctor
+   └─ codesearch index --list
+
+2. CONSULTA BROAD
+   └─ codesearch_semantic_search(query="intent", limit=10)
+
+3. REFINAR
+   ├─ filter_path para scoping
+   └─ Términos de dominio (CFDI, factura, requisición...)
+
+4. REFERENCIAS
+   └─ codesearch_find_references(symbol="MiClase")
+
+5. VERIFICAR
+   └─ Leer archivos reales
+```
+
+## Modelos Disponibles
+
+| Modelo | Dimensiones | Uso |
+|--------|-------------|-----|
+| `minilm-l6-q` | 384 | Default, balance velocidad/precisión |
+| `bge-small-q` | 384 | Rápido |
+| `minilm-l12-q` | 384 | Mejor precisión |
+| `jina-code` | 768 | Código (requiere re-index) |
+| `e5-multilingual` | 384 | Multilingüe (español/inglés) |
+| `nomic-v1.5` | 768 | Alta calidad |
+
+**Nota**: Cambiar modelo requiere re-indexar (`codesearch index --force`).
+
+## Comandos CLI Verificados
+
+### Diagnóstico
 ```bash
 codesearch doctor
 codesearch stats
 codesearch index --list
 ```
 
-### Search examples
+### Indexación
 ```bash
-codesearch search "site_name setting in admin configuration" --max-results 5 --scores
-codesearch search "site_name setting" --filter-path "Documents/Residentes/Proyectos/facturacion_alejandro/"
+codesearch index [PATH]              # Indexar
+codesearch index --force            # Re-indexar
+codesearch serve [PATH] -p 4444     # Servidor con watch
 ```
 
-## Verified MCP Calls
+### Búsqueda
+```bash
+codesearch search "query" --max-results 5 --scores
+codesearch search "query" --filter-path "proyecto/"
+codesearch search "query" --sync          # Re-index cambios antes de buscar
+```
+
+## MCP Tools
+
+- `codesearch_index_status()` - Estado del índice
+- `codesearch_find_databases()` - Listar DBs
+- `codesearch_semantic_search()` - Búsqueda semántica
+- `codesearch_find_references()` - Usos de un símbolo
+
+## Path Scoping (Crítico)
+
+Codesearch puede usar un índice padre/global. **Siempre usar filtro**:
+
+```bash
+--filter-path "Documents/Proyectos/mi-proyecto/"
+```
 
 ```text
-codesearch_index_status()
-codesearch_find_databases()
-codesearch_semantic_search(query="site name setting in admin configuration", compact=true, limit=5, filter_path="Documents/Residentes/Proyectos/facturacion_alejandro")
-codesearch_find_references(symbol="Setting", limit=10)
+filter_path="Documents/Proyectos/mi-proyecto/"
 ```
 
-## Recommended Workflow
+## Tips de Consultas
 
-1. Check index readiness:
-   - MCP: `codesearch_index_status()`
-   - CLI: `codesearch doctor`
-2. Check which DB is active:
-   - MCP: `codesearch_find_databases()`
-   - CLI: `codesearch index --list`
-3. Run broad semantic search.
-4. Narrow with path filters.
-5. Run reference lookup for target symbols.
-6. Open exact files/lines with file read tools to verify behavior.
+| Tipo | Ejemplo |
+|------|---------|
+| Verbo + intención | "where invoice status changes to paid" |
+| Términos dominio | "CFDI", "regimen fiscal", "timbrado" |
+| Español | "dónde cambia el status de factura a pagada" |
+| Español | "busca la función que genera cfdi" |
 
-## Important Behavior (Observed)
+## Opciones Avanzadas
 
-- Codesearch may use the nearest parent index (not always project-local).
-- If a parent index exists, `codesearch index --add .` can fail with:
-  - "You cannot create a separate index for a subdirectory"
-- `--path` is not always a strict result filter in shared indexes.
-- `--filter-path` is the reliable way to constrain results.
+| Opción | Descripción |
+|--------|-------------|
+| `--sync` | Re-index archivos modificados antes de buscar |
+| `--scores` | Mostrar relevancia |
+| `--rerank` | Neural reranking |
+| `--vector-only` | Solo búsqueda vectorial |
 
 ## Troubleshooting
 
-- `IndexWriter lock busy` / `Failed to acquire Lockfile`:
-  - Stop concurrent index writers (`codesearch serve`, parallel index jobs), then retry.
-- `index not found`:
-  - Run `codesearch setup` and then `codesearch index`.
-- Too many cross-project results:
-  - Use `--filter-path` (CLI) or `filter_path` (MCP).
-- Weak relevance:
-  - Reindex and test another model (`bge-small`, `jina-code`).
+| Problema | Solución |
+|----------|----------|
+| `IndexWriter lock busy` | Detener `codesearch serve` |
+| `index not found` | `codesearch setup` && `codesearch index` |
+| `Invalid vector dimensions` | Re-index con modelo correcto |
+| Baja relevancia | Probar `e5-multilingual` para español |
 
-## Query Writing Tips
+## Referencias
 
-- Use verbs + intent: "where invoice status changes to paid"
-- Use domain terms: "CFDI", "regimen fiscal", "timbrado"
-- Ask for flow points: "entrypoint for admin settings update"
-
-Iterate as: broad query -> filtered query -> references -> file verification.
-
-## Deep Dives
-
-- `references/principles.md` - Search principles and strategy
-- `references/validation.md` - Pre-delivery validation checklist
-- `references/critique.md` - Self-critique for search quality
-- `references/example.md` - End-to-end CLI + MCP example
+- `references/README.md` - Guía completa
+- `references/principles.md` - Principios de búsqueda
+- `references/validation.md` - Checklist de validación
+- `references/critique.md` - Auto-revisión de calidad
+- `references/example.md` - Ejemplos end-to-end

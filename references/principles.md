@@ -1,32 +1,42 @@
-# Code Search Principles
+# Búsqueda Semántica: Principios Core
 
-Core principles for reliable semantic code exploration.
+## 1) Validar antes de buscar
 
-## 1) Discover first, conclude later
+- Verificar que `codesearch doctor` pase
+- Confirmar que el índice esté listo
+- Identificar la base de datos activa
 
-- Start broad with semantic search.
-- Narrow gradually with `filter_path` and better query wording.
-- Confirm behavior by reading concrete files and lines before answering.
+## 2) Descubrir primero, concluir después
 
-## 2) Path scoping is mandatory in shared indexes
+- Start broad con búsqueda semántica
+- Narrow gradualmente con `filter_path` y mejor wording
+- Confirmar comportamiento leyendo archivos concretos
 
-- Codesearch can use a parent/global index.
-- Always constrain scope for project-specific work:
+## 3) Path scoping es mandatorio
+
+- Codesearch puede usar un índice padre/global
+- Siempre restringir scope para trabajo específico:
   - MCP: `filter_path`
   - CLI: `--filter-path`
 
-## 3) References before refactors
+## 4) Referencias antes de refactors
 
-- Before changing a symbol, run a references lookup.
-- Use results for impact analysis and test planning.
+- Antes de cambiar un símbolo, ejecutar reference lookup
+- Usar resultados para análisis de impacto y planificación de tests
 
-## 4) Iterative query strategy
+## 5) Estrategia iterativa de queries
 
-- Query 1: intent-level (feature or workflow)
-- Query 2: domain terms (business vocabulary)
-- Query 3: symbol-level (class/method/variable)
+- Query 1: nivel intent (feature o workflow)
+- Query 2: términos de dominio (vocabulario de negocio)
+- Query 3: nivel símbolo (clase/método/variable)
 
-## 5) Validate freshness
+## 6) Validar frescura
 
-- Check index status before deep investigation.
-- If results look stale, reindex or use sync options.
+- Check index status antes de investigación profunda
+- Si resultados se ven stale, reindex o usar sync options
+
+## 7) Español e inglés
+
+- Codesearch soporta ambos idiomas
+- Para mejor resultados en español, usar términos de dominio en español
+- Considerar modelo `e5-multilingual` para mejor soporte multilingüe
