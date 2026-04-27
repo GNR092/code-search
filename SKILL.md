@@ -74,6 +74,49 @@ codesearch_index_status()
    └─ Leer archivos reales
 ```
 
+## Politica de bajo consumo
+
+Usa `code-search` como primer paso para ubicar archivos, símbolos y referencias. No abras archivos completos ni recorras carpetas grandes antes de tener resultados compactos.
+
+Presupuesto recomendado:
+
+- Exploracion inicial: 5 a 8 resultados.
+- Refinamiento: 3 a 5 resultados.
+- Lectura directa: maximo 1 a 3 archivos, preferentemente fragmentos.
+- Documentacion: generar desde resumen compacto, no desde codigo completo.
+
+## Exclusiones obligatorias
+
+Ignora por completo estas carpetas durante busquedas, indexacion, lectura de resultados y resumenes:
+
+- `.git/`
+- `__pycache__/`
+- `.pytest_cache/`
+- `.mypy_cache/`
+- `.ruff_cache/`
+- `node_modules/`
+- `vendor/`
+- `dist/`
+- `build/`
+- `coverage/`
+- `.codesearch.db/`
+
+Si algun resultado aparece dentro de una ruta excluida, descartalo y repite la busqueda con `filter_path` mas especifico.
+
+Fallback textual con exclusiones, solo cuando la busqueda semantica no pueda resolverlo:
+
+```bash
+rg "texto_a_buscar" \
+  --glob '!**/.git/**' \
+  --glob '!**/__pycache__/**' \
+  --glob '!**/node_modules/**' \
+  --glob '!**/vendor/**' \
+  --glob '!**/dist/**' \
+  --glob '!**/build/**' \
+  --glob '!**/coverage/**' \
+  --glob '!**/.codesearch.db/**'
+```
+
 ## Modelos Disponibles
 
 | Modelo | Dimensiones | Uso |
